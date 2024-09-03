@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use csv;
 use serde::{Deserialize, Serialize};
-use serde_json::{Value};
+use serde_json::{Map, Value};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Transaction {
@@ -13,7 +13,6 @@ pub struct Transaction {
 
 pub fn import_transactions (path: PathBuf) -> Result<()> {
 	let t = convert_transactions(path);
-	print!("{:?}", t);
 	Ok(())
 }
 
@@ -30,9 +29,9 @@ pub fn convert_transactions (path: PathBuf) -> Result<Vec<Transaction>> {
 		// todo: also refactor to make convert_transactions pure
 		// todo: add anyhow contexts (here and in main)
 
-		let transaction: Value = transaction.context("failed to parse transaction")?;
-		print!("{:?}", transaction);
-		let transaction = transaction.as_object().expect("failed to convert CSV object to JSON object");
+		let transaction: Map<String, Value> = transaction.context("failed to parse transaction")?;
+		println!("{:?}", transaction);
+		// break;
 
 		let date = transaction.get("Buchungstag").expect("raw transaction is missing required field 'Buchungstag'");
 		let date = date.as_str().unwrap_or_default().to_owned();
