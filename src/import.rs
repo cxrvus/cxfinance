@@ -57,8 +57,7 @@ pub fn convert_transactions (path: PathBuf) -> Result<Vec<Transaction>> {
 
 fn fix_uft8(path: &PathBuf) -> Result<()> {
 	let text = fs::read(path)?;
-	let text = String::from_utf8_lossy(&text).to_string();
-	fs::write(path, text)?;
-	// todo: cmp texts; only overwrite on diff
+	let sanitized_text = String::from_utf8_lossy(&text).to_string();
+	if text != sanitized_text.as_bytes() { fs::write(path, sanitized_text)?; }
 	Ok(())
 }
