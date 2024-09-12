@@ -13,6 +13,7 @@ pub struct Transaction {
 
 pub fn import_transactions (path: PathBuf) -> Result<()> {
 	let t = convert_transactions(path);
+	println!("{:#?}", t);
 	Ok(())
 }
 
@@ -30,7 +31,7 @@ pub fn convert_transactions (path: PathBuf) -> Result<Vec<Transaction>> {
 		// todo: add anyhow contexts (here and in main)
 
 		let transaction: Map<String, Value> = transaction.context("failed to parse transaction")?;
-		println!("{:?}", transaction);
+		// println!("{:?}", transaction);
 		// break;
 
 		let date = transaction.get("Buchungstag").expect("raw transaction is missing required field 'Buchungstag'");
@@ -42,7 +43,7 @@ pub fn convert_transactions (path: PathBuf) -> Result<Vec<Transaction>> {
 		 	.into_iter()
 			.map(|field| transaction.get(field).unwrap_or(&Value::Null).as_str().unwrap())
 			.collect::<Vec<&str>>()
-			.join(";")
+			.join(";\n")
 		;
 
 		let simple_transaction = Transaction { date, amount, description };
