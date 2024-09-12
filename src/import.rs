@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{fs, path::PathBuf};
 use anyhow::{Context, Result};
 use csv;
 use serde::{Deserialize, Serialize};
@@ -19,6 +19,8 @@ pub fn import_transactions (path: PathBuf) -> Result<()> {
 
 
 pub fn convert_transactions (path: PathBuf) -> Result<Vec<Transaction>> { 
+	fix_uft8(&path)?;
+
 	let mut rdr = csv::ReaderBuilder::new()
 		.delimiter(b';')
 		.from_path(path)?;
@@ -51,4 +53,12 @@ pub fn convert_transactions (path: PathBuf) -> Result<Vec<Transaction>> {
 	}
 
 	Ok(simple_transactions)
+}
+
+fn fix_uft8(path: &PathBuf) -> Result<()> {
+	let text = fs::read(path)?;
+	let text = String::from_utf8_lossy(&text).to_string();
+	fs::write(path, text)?;
+	// todo: cmp texts; only overwrite on diff
+	Ok(())
 }
