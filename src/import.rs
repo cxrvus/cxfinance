@@ -16,7 +16,8 @@ pub fn import_transactions (path: PathBuf) -> Result<()> {
 
 	let mut rdr = csv::ReaderBuilder::new()
 		.delimiter(b';')
-		.from_path(path)?
+		.from_path(path)
+		.context("failed to create CSV reader")?
 	;
 
 	let t = convert_transactions(&mut rdr);
@@ -31,8 +32,6 @@ pub fn convert_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>>
 	let transactions = rdr.deserialize();
 
 	for transaction in transactions {
-		// todo: add anyhow contexts (here and in main)
-
 		let transaction: Map<String, Value> = transaction.context("failed to parse transaction")?;
 
 		let date = transaction.get("Buchungstag").expect("raw transaction is missing required field 'Buchungstag'");
@@ -55,8 +54,8 @@ pub fn convert_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>>
 }
 
 fn fix_uft8(path: &PathBuf) -> Result<()> {
-	let text = fs::read(path)?;
+	let text = fs::read(path).context("failed to read from file for sanitization")?;
 	let sanitized_text = String::from_utf8_lossy(&text).to_string();
-	if text != sanitized_text.as_bytes() { fs::write(path, sanitized_text)?; }
+	if text != sanitized_text.as_bytes() { fs::write(path, sanitized_text).context("failed to write to file for sanitization")?; }
 	Ok(())
 }
