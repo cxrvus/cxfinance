@@ -1,6 +1,6 @@
-use std::{fs, path::PathBuf};
+use std::{fs::{self, File}, path::PathBuf};
 use anyhow::{Context, Result};
-use csv;
+use csv::{self, Reader};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
@@ -12,29 +12,28 @@ pub struct Transaction {
 }
 
 pub fn import_transactions (path: PathBuf) -> Result<()> {
-	let t = convert_transactions(path);
+	fix_uft8(&path)?;
+
+	let mut rdr = csv::ReaderBuilder::new()
+		.delimiter(b';')
+		.from_path(path)?
+	;
+
+	let t = convert_transactions(&mut rdr);
+
 	println!("{:#?}", t);
 	Ok(())
 }
 
 
-pub fn convert_transactions (path: PathBuf) -> Result<Vec<Transaction>> { 
-	fix_uft8(&path)?;
-
-	let mut rdr = csv::ReaderBuilder::new()
-		.delimiter(b';')
-		.from_path(path)?;
-	let transactions = rdr.deserialize();
+pub fn convert_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>> { 
 	let mut simple_transactions: Vec<Transaction> = vec![];
+	let transactions = rdr.deserialize();
 
 	for transaction in transactions {
-		// todo: parse to serde first, then convert
-		// todo: also refactor to make convert_transactions pure
 		// todo: add anyhow contexts (here and in main)
 
 		let transaction: Map<String, Value> = transaction.context("failed to parse transaction")?;
-		// println!("{:?}", transaction);
-		// break;
 
 		let date = transaction.get("Buchungstag").expect("raw transaction is missing required field 'Buchungstag'");
 		let date = date.as_str().unwrap_or_default().to_owned();
