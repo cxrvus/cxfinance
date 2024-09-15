@@ -21,7 +21,7 @@ pub fn import_transactions (path: PathBuf) -> Result<()> {
 }
 
 
-pub fn convert_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>> { 
+fn convert_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>> { 
 	let mut simple_transactions: Vec<Transaction> = vec![];
 	let transactions = rdr.deserialize();
 
