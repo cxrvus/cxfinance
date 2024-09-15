@@ -40,7 +40,7 @@ pub fn convert_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>>
 			.join(";\n")
 		;
 
-		let simple_transaction = Transaction { date, amount, description };
+		let simple_transaction = Transaction::new(date, amount, description);
 		simple_transactions.push(simple_transaction);
 	}
 
