@@ -7,7 +7,7 @@ use serde_json::{Map, Value};
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Transaction {
 	date: String,
-	amount: f64,
+	amount: i64,
 	description: String,
 }
 
@@ -37,7 +37,7 @@ pub fn convert_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>>
 		let date = transaction.get("Buchungstag").expect("raw transaction is missing required field 'Buchungstag'");
 		let date = date.as_str().unwrap_or_default().to_owned();
 		let amount = transaction.get("Betrag").expect("raw transaction is missing required field 'Betrag'");
-		let amount = amount.as_f64().unwrap_or_default();
+		let amount = amount.as_i64().unwrap_or_default();
 
 		let description = ["Buchungstext", "Verwendungszweck", "Beguenstigter/Zahlungspflichtiger"]
 		 	.into_iter()
