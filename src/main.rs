@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use anyhow::Result;
 
 mod import;
+mod pattern;
 mod transaction;
 
 fn main() {
