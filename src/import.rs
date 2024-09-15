@@ -1,15 +1,9 @@
 use std::{fs::{File, read, write}, path::PathBuf};
 use anyhow::{Context, Result};
 use csv::{Reader, ReaderBuilder};
-use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Transaction {
-	date: String,
-	amount: i64,
-	description: String,
-}
+use crate::transaction::Transaction;
 
 pub fn import_transactions (path: PathBuf) -> Result<()> {
 	fix_uft8(&path)?;
