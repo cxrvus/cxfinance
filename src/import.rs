@@ -1,6 +1,6 @@
-use std::{fs::{self, File}, path::PathBuf};
+use std::{fs::{File, read, write}, path::PathBuf};
 use anyhow::{Context, Result};
-use csv::{self, Reader};
+use csv::{Reader, ReaderBuilder};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
@@ -14,7 +14,7 @@ pub struct Transaction {
 pub fn import_transactions (path: PathBuf) -> Result<()> {
 	fix_uft8(&path)?;
 
-	let mut rdr = csv::ReaderBuilder::new()
+	let mut rdr = ReaderBuilder::new()
 		.delimiter(b';')
 		.from_path(path)
 		.context("failed to create CSV reader")?
@@ -54,8 +54,8 @@ pub fn convert_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>>
 }
 
 fn fix_uft8(path: &PathBuf) -> Result<()> {
-	let text = fs::read(path).context("failed to read from file for sanitization")?;
+	let text = read(path).context("failed to read from file for sanitization")?;
 	let sanitized_text = String::from_utf8_lossy(&text).to_string();
-	if text != sanitized_text.as_bytes() { fs::write(path, sanitized_text).context("failed to write to file for sanitization")?; }
+	if text != sanitized_text.as_bytes() { write(path, sanitized_text).context("failed to write to file for sanitization")?; }
 	Ok(())
 }
