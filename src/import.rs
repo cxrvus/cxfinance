@@ -14,9 +14,9 @@ pub fn import_transactions (path: PathBuf) -> Result<()> {
 		.context("failed to create CSV reader")?
 	;
 
-	let t = convert_transactions(&mut rdr);
+	let new_transactions = convert_transactions(&mut rdr)?;
+	// let old_transactions = read()
 
-	println!("{:#?}", t);
 	Ok(())
 }
 
@@ -45,6 +45,10 @@ fn convert_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>> {
 	}
 
 	Ok(simple_transactions)
+}
+
+fn merge_transactions(current: Vec<Transaction>, new: Vec<Transaction>) -> Result<Vec<Transaction>> {
+	Ok(current)
 }
 
 fn fix_uft8(path: &PathBuf) -> Result<()> {
