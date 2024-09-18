@@ -1,27 +1,27 @@
-use std::{fs::{File, read, write}, path::PathBuf};
+use std::{fs::{read, read_to_string, write, File}, path::PathBuf};
 use anyhow::{Context, Result};
 use csv::{Reader, ReaderBuilder};
 use serde_json::{Map, Value};
+use crate::config::get_config;
 
 use crate::transaction::Transaction;
 
 pub fn import_transactions (path: PathBuf) -> Result<()> {
 	fix_uft8(&path)?;
 
-	let mut rdr = ReaderBuilder::new()
-		.delimiter(b';')
-		.from_path(path)
-		.context("failed to create CSV reader")?
-	;
-
-	let new_transactions = convert_transactions(&mut rdr)?;
-	// let old_transactions = read()
+	let mut rdr = get_transaction_reader(&path)?;
+	let new = convert_raw_transactions(&mut rdr)?;
+	let existing = get_existing_transactions()?;
+	let merged = merge_transactions(existing, new)?;
 
 	Ok(())
 }
 
+fn get_transaction_reader(path: &PathBuf) -> Result<Reader<File>> {
+	ReaderBuilder::new().delimiter(b';').from_path(path).context("failed to create CSV reader")
+}
 
-fn convert_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>> { 
+fn convert_raw_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>> { 
 	let mut simple_transactions: Vec<Transaction> = vec![];
 	let transactions = rdr.deserialize();
 
@@ -47,13 +47,22 @@ fn convert_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>> {
 	Ok(simple_transactions)
 }
 
-fn merge_transactions(current: Vec<Transaction>, new: Vec<Transaction>) -> Result<Vec<Transaction>> {
-	Ok(current)
-}
-
 fn fix_uft8(path: &PathBuf) -> Result<()> {
 	let text = read(path).context("failed to read from file for sanitization")?;
 	let sanitized_text = String::from_utf8_lossy(&text).to_string();
 	if text != sanitized_text.as_bytes() { write(path, sanitized_text).context("failed to write to file for sanitization")?; }
 	Ok(())
+}
+
+fn get_existing_transactions() -> Result<Vec<Transaction>> {
+	let mut db_path = get_config()?.db_root.clone();
+	db_path.push("/transactions.json");
+	if !db_path.exists() { write(&db_path, "[]")?; }
+	let db_content = read_to_string(db_path)?;
+	let transactions: Vec<Transaction> = serde_json::from_str(&db_content)?;
+	Ok(transactions)
+}
+
+fn merge_transactions(existing: Vec<Transaction>, new: Vec<Transaction>) -> Result<Vec<Transaction>> {
+	Ok(existing)
 }
