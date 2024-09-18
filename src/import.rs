@@ -13,6 +13,7 @@ pub fn import_transactions (import_path: PathBuf) -> Result<()> {
 	let imp_transacs = convert_csv_transactions(&mut rdr)?;
 	let db_transacs = get_db_transactions()?;
 	let merged = merge_transactions(db_transacs, imp_transacs)?;
+	let merged_str = serde_json::to_string(&merged)?;
 
 	Ok(())
 }
