@@ -1,4 +1,4 @@
-use std::{fs::{read, read_to_string, write, File}, path::PathBuf};
+use std::{fs::{create_dir, read, read_to_string, write, File}, path::PathBuf};
 use anyhow::{Context, Result};
 use csv::{Reader, ReaderBuilder};
 use serde_json::{Map, Value};
@@ -10,10 +10,14 @@ pub fn import_transactions (import_path: PathBuf) -> Result<()> {
 	fix_uft8(&import_path)?;
 
 	let mut rdr = get_csv_reader(&import_path)?;
+	let mut db_path = get_config()?.db_root.clone();
+
 	let imp_transacs = convert_csv_transactions(&mut rdr)?;
-	let db_transacs = get_db_transactions()?;
+	let db_transacs = get_db_transactions(&mut db_path)?;
 	let merged = merge_transactions(db_transacs, imp_transacs)?;
 	let merged_str = serde_json::to_string(&merged)?;
+
+	write(db_path, merged_str).context("failed to write to database file")?;
 
 	Ok(())
 }
@@ -55,13 +59,17 @@ fn fix_uft8(path: &PathBuf) -> Result<()> {
 	Ok(())
 }
 
-fn get_db_transactions() -> Result<Vec<Transaction>> {
-	let mut db_path = get_config()?.db_root.clone();
-	db_path.push("/transactions.json");
+fn get_db_transactions(db_path: &mut PathBuf) -> Result<Vec<Transaction>> {
+	if !db_path.exists() {
+		create_dir(&db_path).context("failed to create database folder")?;
+		println!("created new database folder at {}", db_path.to_str().unwrap() );
+	}
+
+	db_path.push("transactions.json");
 
 	if !db_path.exists() {
-		write(&db_path, "[]").context("failed to create empty database")?;
-		println!("created new database file");
+		write(&db_path, "[]\n").context("failed to create empty database")?;
+		println!("created new database file {}", db_path.file_name().unwrap().to_str().unwrap() );
 	}
 
 	let db_content = read_to_string(db_path).context("failed to read database file")?;
