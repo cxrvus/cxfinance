@@ -15,7 +15,7 @@ pub fn import_transactions (import_path: PathBuf) -> Result<()> {
 	let imp_transacs = convert_csv_transactions(&mut rdr)?;
 	let db_transacs = get_db_transactions(&mut db_path)?;
 	let merged = merge_transactions(db_transacs, imp_transacs)?;
-	let merged_str = serde_json::to_string(&merged)?;
+	let merged_str = serde_json::to_string_pretty(&merged)?;
 
 	write(db_path, merged_str).context("failed to write to database file")?;
 
