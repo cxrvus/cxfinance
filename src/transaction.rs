@@ -1,14 +1,14 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Transaction {
-	date: String,
-	amount: i64,
-	description: String,
+	pub timestamp: i64,
+	pub amount: i64,
+	pub description: String,
 }
 
 impl Transaction {
-	pub fn new(date: String, amount: i64, description: String) -> Self {
-		Transaction { date, amount, description }
+	pub fn new(timestamp: i64, amount: i64, description: String) -> Self {
+		Transaction { timestamp, amount, description }
 	}
 }
