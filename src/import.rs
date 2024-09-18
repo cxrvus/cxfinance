@@ -58,9 +58,14 @@ fn fix_uft8(path: &PathBuf) -> Result<()> {
 fn get_db_transactions() -> Result<Vec<Transaction>> {
 	let mut db_path = get_config()?.db_root.clone();
 	db_path.push("/transactions.json");
-	if !db_path.exists() { write(&db_path, "[]")?; }
-	let db_content = read_to_string(db_path)?;
-	let transactions: Vec<Transaction> = serde_json::from_str(&db_content)?;
+
+	if !db_path.exists() {
+		write(&db_path, "[]").context("failed to create empty database")?;
+		println!("created new database file");
+	}
+
+	let db_content = read_to_string(db_path).context("failed to read database file")?;
+	let transactions: Vec<Transaction> = serde_json::from_str(&db_content).context("failed to parse database")?;
 	Ok(transactions)
 }
 

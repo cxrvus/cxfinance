@@ -1,5 +1,5 @@
-use anyhow::Result;
-use std::{fs::read_to_string, path::{Path, PathBuf}};
+use anyhow::{Context, Result};
+use std::{env::current_dir, fs::read_to_string, path::{Path, PathBuf}};
 use serde::Deserialize;
 use serde_json;
 
@@ -26,7 +26,7 @@ pub fn get_config() -> Result<Config> {
 		return Ok(Config::default())
 	}
 	else {
-		let string = read_to_string(path)?;
+		let string = read_to_string(path).context("failed to read config file")?;
 		return serde_json::from_str(&string).map_err(|e| anyhow::Error::new(e));
 	}
 }
