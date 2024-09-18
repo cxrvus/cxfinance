@@ -28,8 +28,8 @@ fn convert_raw_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>>
 	for transaction in transactions {
 		let transaction: Map<String, Value> = transaction.context("failed to parse transaction")?;
 
-		let date = transaction.get("Buchungstag").expect("raw transaction is missing required field 'Buchungstag'");
-		let date = date.as_str().unwrap_or_default().to_owned();
+		let timestamp = transaction.get("Buchungstag").expect("raw transaction is missing required field 'Buchungstag'");
+		let timestamp = timestamp.as_i64().unwrap_or_default();
 		let amount = transaction.get("Betrag").expect("raw transaction is missing required field 'Betrag'");
 		let amount = amount.as_i64().unwrap_or_default();
 
@@ -40,7 +40,7 @@ fn convert_raw_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>>
 			.join(";\n")
 		;
 
-		let simple_transaction = Transaction::new(date, amount, description);
+		let simple_transaction = Transaction::new(timestamp, amount, description);
 		simple_transactions.push(simple_transaction);
 	}
 
@@ -63,6 +63,16 @@ fn get_existing_transactions() -> Result<Vec<Transaction>> {
 	Ok(transactions)
 }
 
-fn merge_transactions(existing: Vec<Transaction>, new: Vec<Transaction>) -> Result<Vec<Transaction>> {
-	Ok(existing)
+fn merge_transactions(old: Vec<Transaction>, new: Vec<Transaction>) -> Result<Vec<Transaction>> {
+	if new.len() == 0 { Ok(old) }
+	else if old.len() == 0 { Ok(new) }
+	else {
+		let mut merged = old.clone();
+		for transac in new {
+			if !old.iter().any(|x| x.timestamp == transac.timestamp) {
+				merged.push(transac);
+			}
+		}
+		Ok(merged)
+	}
 }
