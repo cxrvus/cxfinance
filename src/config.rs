@@ -22,7 +22,7 @@ impl Default for Config {
 pub fn get_config() -> Result<Config> {
 	let path = Path::new(CFG_PATH);
 	if !path.exists() {
-		println!("Config file not found, using default settings.\ncreate a {} file in your home directory.", CFG_PATH);
+		println!("config file not found, using default settings.\ncreate a {} file in your home directory.", CFG_PATH);
 		return Ok(Config::default())
 	}
 	else {
