@@ -12,8 +12,9 @@ pub struct Config {
 
 impl Default for Config {
 	fn default() -> Self {
+		let current_dir = format!("{}/{}", current_dir().unwrap().to_str().unwrap(), "db");
 		Self {
-			db_root: PathBuf::from("./db")
+			db_root: PathBuf::from(current_dir)
 		}
 	}
 }
