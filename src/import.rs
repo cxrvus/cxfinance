@@ -6,22 +6,22 @@ use crate::config::get_config;
 
 use crate::transaction::Transaction;
 
-pub fn import_transactions (path: PathBuf) -> Result<()> {
-	fix_uft8(&path)?;
+pub fn import_transactions (import_path: PathBuf) -> Result<()> {
+	fix_uft8(&import_path)?;
 
-	let mut rdr = get_transaction_reader(&path)?;
-	let new = convert_raw_transactions(&mut rdr)?;
-	let existing = get_existing_transactions()?;
-	let merged = merge_transactions(existing, new)?;
+	let mut rdr = get_csv_reader(&import_path)?;
+	let imp_transacs = convert_csv_transactions(&mut rdr)?;
+	let db_transacs = get_db_transactions()?;
+	let merged = merge_transactions(db_transacs, imp_transacs)?;
 
 	Ok(())
 }
 
-fn get_transaction_reader(path: &PathBuf) -> Result<Reader<File>> {
+fn get_csv_reader(path: &PathBuf) -> Result<Reader<File>> {
 	ReaderBuilder::new().delimiter(b';').from_path(path).context("failed to create CSV reader")
 }
 
-fn convert_raw_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>> { 
+fn convert_csv_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>> { 
 	let mut simple_transactions: Vec<Transaction> = vec![];
 	let transactions = rdr.deserialize();
 
@@ -54,7 +54,7 @@ fn fix_uft8(path: &PathBuf) -> Result<()> {
 	Ok(())
 }
 
-fn get_existing_transactions() -> Result<Vec<Transaction>> {
+fn get_db_transactions() -> Result<Vec<Transaction>> {
 	let mut db_path = get_config()?.db_root.clone();
 	db_path.push("/transactions.json");
 	if !db_path.exists() { write(&db_path, "[]")?; }
@@ -63,13 +63,13 @@ fn get_existing_transactions() -> Result<Vec<Transaction>> {
 	Ok(transactions)
 }
 
-fn merge_transactions(old: Vec<Transaction>, new: Vec<Transaction>) -> Result<Vec<Transaction>> {
-	if new.len() == 0 { Ok(old) }
-	else if old.len() == 0 { Ok(new) }
+fn merge_transactions(db: Vec<Transaction>, imp: Vec<Transaction>) -> Result<Vec<Transaction>> {
+	if imp.len() == 0 { Ok(db) }
+	else if db.len() == 0 { Ok(imp) }
 	else {
-		let mut merged = old.clone();
-		for transac in new {
-			if !old.iter().any(|x| x.timestamp == transac.timestamp) {
+		let mut merged = db.clone();
+		for transac in imp {
+			if !db.iter().any(|x| x.timestamp == transac.timestamp) {
 				merged.push(transac);
 			}
 		}
