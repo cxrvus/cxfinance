@@ -1,8 +1,8 @@
-use std::{fs::{create_dir, read, read_to_string, write, File}, hash::{DefaultHasher, Hash, Hasher} , path::PathBuf};
+use std::{fs::{create_dir, read, read_to_string, write, File}, path::PathBuf};
 use anyhow::{Context, Result};
 use csv::{Reader, ReaderBuilder};
 use serde_json::{Map, Value};
-use crate::{config::get_config, transaction};
+use crate::config::get_config;
 
 use crate::transaction::Transaction;
 
