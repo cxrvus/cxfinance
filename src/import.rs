@@ -40,8 +40,8 @@ fn convert_csv_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>>
 		// todo: parse with RegEx to turn into YYYY-MM-DD
 
 		let amount_value = transaction.get("Betrag").expect("raw transaction is missing required field 'Betrag'");
-		let amount = amount_value.as_str().unwrap_or_default().to_owned();
-		// todo: parse amount to i64
+		let amount_str = amount_value.as_str().unwrap_or_default();
+		let amount: i64 = amount_str.replace(",", "").parse().context("couldn't parse transaction amount")?;
 
 		let description = ["Buchungstext", "Verwendungszweck", "Beguenstigter/Zahlungspflichtiger"]
 		 	.into_iter()
@@ -50,7 +50,7 @@ fn convert_csv_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>>
 			.join(";")
 		;
 
-		let simple_transaction = Transaction{ day, amount: 0, description, hash: hash.to_string() };
+		let simple_transaction = Transaction{ day, amount, description, hash: hash.to_string() };
 		simple_transactions.push(simple_transaction);
 	}
 
