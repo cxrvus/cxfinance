@@ -42,7 +42,7 @@ fn convert_csv_transactions (rdr: &mut Reader<File>) -> Result<Vec<SkTransaction
 		 	.into_iter()
 			.map(|field| transaction.get(field).unwrap_or(&Value::Null).as_str().unwrap())
 			.collect::<Vec<&str>>()
-			.join(";\n")
+			.join(";")
 		;
 
 		let simple_transaction = SkTransaction{ day, amount, description };
