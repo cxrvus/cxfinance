@@ -1,5 +1,8 @@
+use std::hash::{DefaultHasher, Hash, Hasher};
+
 use serde::{Deserialize, Serialize};
 
+#[derive(Clone, Debug, Deserialize, Hash, Serialize)]
 pub struct Transaction {
 	pub day: String,
 	pub amount: i64,
@@ -7,10 +10,10 @@ pub struct Transaction {
 	pub hash: String
 }
 
-// todo: add RawTransaction enum that includes Transaction variations for all banks
-#[derive(Clone, Debug, Deserialize, Hash, Serialize)]
-pub struct SkTransaction {
-	pub day: String,
-	pub amount: String,
-	pub description: String,
+impl Transaction {
+	pub fn generate_hash<T: Hash>(item: &T) -> u64 {
+		let mut hasher = DefaultHasher::new();
+		item.hash(& mut hasher);
+		hasher.finish()
+	}
 }

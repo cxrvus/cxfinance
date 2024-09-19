@@ -1,10 +1,10 @@
-use std::{fs::{create_dir, read, read_to_string, write, File}, path::PathBuf};
+use std::{fs::{create_dir, read, read_to_string, write, File}, hash::{DefaultHasher, Hash, Hasher} , path::PathBuf};
 use anyhow::{Context, Result};
 use csv::{Reader, ReaderBuilder};
 use serde_json::{Map, Value};
-use crate::config::get_config;
+use crate::{config::get_config, transaction};
 
-use crate::transaction::SkTransaction;
+use crate::transaction::Transaction;
 
 pub fn import_transactions (import_path: PathBuf) -> Result<()> {
 	fix_uft8(&import_path)?;
@@ -25,18 +25,23 @@ pub fn import_transactions (import_path: PathBuf) -> Result<()> {
 fn get_csv_reader(path: &PathBuf) -> Result<Reader<File>> {
 	ReaderBuilder::new().delimiter(b';').from_path(path).context("failed to create CSV reader")
 }
-
-fn convert_csv_transactions (rdr: &mut Reader<File>) -> Result<Vec<SkTransaction>> { 
-	let mut simple_transactions: Vec<SkTransaction> = vec![];
+ 
+// todo: extract to parser.rs
+fn convert_csv_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>> { 
 	let transactions = rdr.deserialize();
+	let mut simple_transactions: Vec<Transaction> = vec![];
 
 	for transaction in transactions {
 		let transaction: Map<String, Value> = transaction.context("failed to parse transaction")?;
+		let hash = Transaction::generate_hash(&transaction);
 
-		let day = transaction.get("Buchungstag").expect("raw transaction is missing required field 'Buchungstag'");
-		let day = day.as_str().unwrap_or_default().to_owned();
-		let amount = transaction.get("Betrag").expect("raw transaction is missing required field 'Betrag'");
-		let amount = amount.as_str().unwrap_or_default().to_owned();
+		let day_value = transaction.get("Valutadatum").expect("raw transaction is missing required field 'Valutadatum'");
+		let day = day_value.as_str().unwrap_or_default().to_owned();
+		// todo: parse with RegEx to turn into YYYY-MM-DD
+
+		let amount_value = transaction.get("Betrag").expect("raw transaction is missing required field 'Betrag'");
+		let amount = amount_value.as_str().unwrap_or_default().to_owned();
+		// todo: parse amount to i64
 
 		let description = ["Buchungstext", "Verwendungszweck", "Beguenstigter/Zahlungspflichtiger"]
 		 	.into_iter()
@@ -45,7 +50,7 @@ fn convert_csv_transactions (rdr: &mut Reader<File>) -> Result<Vec<SkTransaction
 			.join(";")
 		;
 
-		let simple_transaction = SkTransaction{ day, amount, description };
+		let simple_transaction = Transaction{ day, amount: 0, description, hash: hash.to_string() };
 		simple_transactions.push(simple_transaction);
 	}
 
@@ -59,7 +64,7 @@ fn fix_uft8(path: &PathBuf) -> Result<()> {
 	Ok(())
 }
 
-fn get_db_transactions(db_path: &mut PathBuf) -> Result<Vec<SkTransaction>> {
+fn get_db_transactions(db_path: &mut PathBuf) -> Result<Vec<Transaction>> {
 	if !db_path.exists() {
 		create_dir(&db_path).context("failed to create database folder")?;
 		println!("created new database folder at {}", db_path.to_str().unwrap() );
@@ -73,11 +78,11 @@ fn get_db_transactions(db_path: &mut PathBuf) -> Result<Vec<SkTransaction>> {
 	}
 
 	let db_content = read_to_string(db_path).context("failed to read database file")?;
-	let transactions: Vec<SkTransaction> = serde_json::from_str(&db_content).context("failed to parse database")?;
+	let transactions: Vec<Transaction> = serde_json::from_str(&db_content).context("failed to parse database")?;
 	Ok(transactions)
 }
 
-fn merge_transactions(db: Vec<SkTransaction>, imp: Vec<SkTransaction>) -> Result<Vec<SkTransaction>> {
+fn merge_transactions(db: Vec<Transaction>, imp: Vec<Transaction>) -> Result<Vec<Transaction>> {
 	if imp.len() == 0 { Ok(db) }
 	else if db.len() == 0 { Ok(imp) }
 	else {
