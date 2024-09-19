@@ -4,7 +4,7 @@ use csv::{Reader, ReaderBuilder};
 use serde_json::{Map, Value};
 use crate::config::get_config;
 
-use crate::transaction::Transaction;
+use crate::transaction::SkTransaction;
 
 pub fn import_transactions (import_path: PathBuf) -> Result<()> {
 	fix_uft8(&import_path)?;
@@ -26,17 +26,17 @@ fn get_csv_reader(path: &PathBuf) -> Result<Reader<File>> {
 	ReaderBuilder::new().delimiter(b';').from_path(path).context("failed to create CSV reader")
 }
 
-fn convert_csv_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>> { 
-	let mut simple_transactions: Vec<Transaction> = vec![];
+fn convert_csv_transactions (rdr: &mut Reader<File>) -> Result<Vec<SkTransaction>> { 
+	let mut simple_transactions: Vec<SkTransaction> = vec![];
 	let transactions = rdr.deserialize();
 
 	for transaction in transactions {
 		let transaction: Map<String, Value> = transaction.context("failed to parse transaction")?;
 
-		let timestamp = transaction.get("Buchungstag").expect("raw transaction is missing required field 'Buchungstag'");
-		let timestamp = timestamp.as_i64().unwrap_or_default();
+		let day = transaction.get("Buchungstag").expect("raw transaction is missing required field 'Buchungstag'");
+		let day = day.as_str().unwrap_or_default().to_owned();
 		let amount = transaction.get("Betrag").expect("raw transaction is missing required field 'Betrag'");
-		let amount = amount.as_i64().unwrap_or_default();
+		let amount = amount.as_str().unwrap_or_default().to_owned();
 
 		let description = ["Buchungstext", "Verwendungszweck", "Beguenstigter/Zahlungspflichtiger"]
 		 	.into_iter()
@@ -45,7 +45,7 @@ fn convert_csv_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>>
 			.join(";\n")
 		;
 
-		let simple_transaction = Transaction::new(timestamp, amount, description);
+		let simple_transaction = SkTransaction{ day, amount, description };
 		simple_transactions.push(simple_transaction);
 	}
 
@@ -59,7 +59,7 @@ fn fix_uft8(path: &PathBuf) -> Result<()> {
 	Ok(())
 }
 
-fn get_db_transactions(db_path: &mut PathBuf) -> Result<Vec<Transaction>> {
+fn get_db_transactions(db_path: &mut PathBuf) -> Result<Vec<SkTransaction>> {
 	if !db_path.exists() {
 		create_dir(&db_path).context("failed to create database folder")?;
 		println!("created new database folder at {}", db_path.to_str().unwrap() );
@@ -73,17 +73,17 @@ fn get_db_transactions(db_path: &mut PathBuf) -> Result<Vec<Transaction>> {
 	}
 
 	let db_content = read_to_string(db_path).context("failed to read database file")?;
-	let transactions: Vec<Transaction> = serde_json::from_str(&db_content).context("failed to parse database")?;
+	let transactions: Vec<SkTransaction> = serde_json::from_str(&db_content).context("failed to parse database")?;
 	Ok(transactions)
 }
 
-fn merge_transactions(db: Vec<Transaction>, imp: Vec<Transaction>) -> Result<Vec<Transaction>> {
+fn merge_transactions(db: Vec<SkTransaction>, imp: Vec<SkTransaction>) -> Result<Vec<SkTransaction>> {
 	if imp.len() == 0 { Ok(db) }
 	else if db.len() == 0 { Ok(imp) }
 	else {
 		let mut merged = db.clone();
 		for transac in imp {
-			if !db.iter().any(|x| x.timestamp == transac.timestamp) {
+			if !db.iter().any(|x| x.day == transac.day) {
 				merged.push(transac);
 			}
 		}
