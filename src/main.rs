@@ -8,6 +8,21 @@ mod parser;
 mod pattern;
 mod transaction;
 
+/// # idea (To Dos)
+/// 
+/// ## Create Structs / Modules
+/// 
+/// - Budget
+/// - Query
+/// - Aggregation (sum, avg, median, count etc)
+/// 	- Grouping (day, week, month, year, pattern etc)
+/// 
+/// ## Add Crates
+/// 
+/// - CLI Table
+/// 
+
+
 fn main() {
 	match execute() {
 		Ok(_) => {},

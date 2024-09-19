@@ -7,3 +7,8 @@ pub struct Transaction {
 	pub description: String,
 	pub hash: String
 }
+
+// todo: match for patterns
+// todo: group-by patterns
+// todo: group-by date
+// idea: fancy table display

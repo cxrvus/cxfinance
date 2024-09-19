@@ -5,7 +5,7 @@ use serde_json::{Map, Value};
 use crate::transaction::Transaction;
 
 pub fn parse_transactions (path: &PathBuf) -> Result<Vec<Transaction>> { 
-	// todo: split up into sub-modules & match a Bank enum to support different banks formats
+	// idea: split up into sub-modules & match a Bank enum to support different banks formats
 	parse_transactions_sk(path)
 }
 

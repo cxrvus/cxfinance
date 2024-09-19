@@ -17,3 +17,5 @@ impl Pattern {
 		else { false }
 	}
 }
+
+// idea: sanitize patterns
