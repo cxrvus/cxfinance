@@ -1,5 +1,5 @@
 use std::{fs::{create_dir, read, read_to_string, write, File}, path::PathBuf};
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use csv::{Reader, ReaderBuilder};
 use serde_json::{Map, Value};
 use crate::config::get_config;
@@ -26,7 +26,7 @@ fn get_csv_reader(path: &PathBuf) -> Result<Reader<File>> {
 	ReaderBuilder::new().delimiter(b';').from_path(path).context("failed to create CSV reader")
 }
  
-// todo: extract to parser.rs
+// todo: extract to parser module
 fn convert_csv_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>> { 
 	let transactions = rdr.deserialize();
 	let mut simple_transactions: Vec<Transaction> = vec![];
@@ -35,12 +35,19 @@ fn convert_csv_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>>
 		let transaction: Map<String, Value> = transaction.context("failed to parse transaction")?;
 		let hash = Transaction::generate_hash(&transaction);
 
-		let day_value = transaction.get("Valutadatum").expect("raw transaction is missing required field 'Valutadatum'");
-		let day = day_value.as_str().unwrap_or_default().to_owned();
-		// todo: parse with RegEx to turn into YYYY-MM-DD
+		let date_value = transaction.get("Valutadatum").expect("raw transaction is missing required field 'Valutadatum'");
+		let date_str = date_value.as_str().expect("cannot parse date to string");
+		let date_parts = date_str.split('.').collect::<Vec<&str>>();
+
+		let [d, m, y] = match date_parts.as_slice() {
+			[d, m, y] => [d, m, y],
+			_ => return Err(anyhow!("Invalid date format")),
+		};
+
+		let date = format!("{y}-{m}-{d}");
 
 		let amount_value = transaction.get("Betrag").expect("raw transaction is missing required field 'Betrag'");
-		let amount_str = amount_value.as_str().unwrap_or_default();
+		let amount_str = amount_value.as_str().expect("cannot parse amount to string");
 		let amount: i64 = amount_str.replace(",", "").parse().context("couldn't parse transaction amount")?;
 
 		let description = ["Buchungstext", "Verwendungszweck", "Beguenstigter/Zahlungspflichtiger"]
@@ -50,7 +57,7 @@ fn convert_csv_transactions (rdr: &mut Reader<File>) -> Result<Vec<Transaction>>
 			.join(";")
 		;
 
-		let simple_transaction = Transaction{ day, amount, description, hash: hash.to_string() };
+		let simple_transaction = Transaction{ date, amount, description, hash: hash.to_string() };
 		simple_transactions.push(simple_transaction);
 	}
 
@@ -88,7 +95,7 @@ fn merge_transactions(db: Vec<Transaction>, imp: Vec<Transaction>) -> Result<Vec
 	else {
 		let mut merged = db.clone();
 		for transac in imp {
-			if !db.iter().any(|x| x.day == transac.day) {
+			if !db.iter().any(|x| x.date == transac.date) {
 				merged.push(transac);
 			}
 		}

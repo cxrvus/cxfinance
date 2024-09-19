@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Hash, Serialize)]
 pub struct Transaction {
-	pub day: String,
+	pub date: String,
 	pub amount: i64,
 	pub description: String,
 	pub hash: String
