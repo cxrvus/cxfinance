@@ -4,6 +4,7 @@ use anyhow::Result;
 
 mod config;
 mod import;
+mod parser;
 mod pattern;
 mod transaction;
 

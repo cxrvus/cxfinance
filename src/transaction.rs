@@ -1,19 +1,9 @@
-use std::hash::{DefaultHasher, Hash, Hasher};
-
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Deserialize, Hash, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Transaction {
 	pub date: String,
 	pub amount: i64,
 	pub description: String,
 	pub hash: String
-}
-
-impl Transaction {
-	pub fn generate_hash<T: Hash>(item: &T) -> u64 {
-		let mut hasher = DefaultHasher::new();
-		item.hash(& mut hasher);
-		hasher.finish()
-	}
 }
