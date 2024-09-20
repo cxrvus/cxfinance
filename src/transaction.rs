@@ -5,7 +5,7 @@ pub struct Transaction {
 	pub date: String,
 	pub amount: i64,
 	pub description: String,
-	pub hash: String
+	pub hash: String,
 }
 
 // todo: match for patterns
