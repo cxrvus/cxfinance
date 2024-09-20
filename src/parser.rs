@@ -16,8 +16,18 @@ pub fn parse_transactions(path: &PathBuf) -> Result<Vec<Transaction>> {
 pub fn generate_hash<T: Hash>(item: &T) -> String {
 	let mut hasher = DefaultHasher::new();
 	item.hash(&mut hasher);
-	hasher.finish().to_string()
-	// todo: convert to hexadecimal
+	to_base16(hasher.finish())
+}
+
+fn to_base16(number: u64) -> String {
+	const BASE16: &[u8; 16] = b"0123456789abcdef";
+	let mut string = String::new();
+	for i in 0..=0xf {
+		let shift = 4 * i;
+		let nibble = ((number & (0xf << shift)) >> shift) as usize;
+		string.insert(0, BASE16[nibble].into());
+	}
+	return string.to_uppercase();
 }
 
 fn parse_transactions_sk(path: &PathBuf) -> Result<Vec<Transaction>> {
