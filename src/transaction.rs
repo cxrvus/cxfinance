@@ -14,7 +14,3 @@ impl Transaction {
 		pattern._is_match(&self.description)
 	}
 }
-
-// todo: group-by patterns
-// todo: group-by date
-// idea: fancy table display

@@ -15,9 +15,6 @@ mod transaction;
 /// ## Create Structs / Modules
 ///
 /// - Budget
-/// - Query
-/// - Aggregation (sum, avg, median, count etc)
-/// 	- Grouping (day, week, month, year, pattern etc)
 ///
 /// ## Add Crates
 ///
