@@ -1,10 +1,10 @@
+use crate::transaction::Transaction;
 use crate::{config::get_config, parser::parse_transactions};
 use anyhow::{Context, Result};
 use std::{
 	fs::{create_dir, read_to_string, write},
 	path::PathBuf,
 };
-use crate::transaction::Transaction;
 
 pub fn import_transactions(import_path: PathBuf) -> Result<()> {
 	let mut db_path = get_config()?.db_root.clone();

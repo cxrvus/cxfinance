@@ -6,6 +6,7 @@ mod config;
 mod import;
 mod parser;
 mod pattern;
+mod query;
 mod transaction;
 
 /// # idea (To Dos)
@@ -33,6 +34,7 @@ fn execute() -> Result<()> {
 	let res = Cli::parse();
 	match res {
 		Cli::Import(args) => import::import_transactions(args.path),
+		Cli::Run(run_args) => query::Query::run_by_name(&run_args.query_name),
 	}
 }
 
@@ -40,10 +42,16 @@ fn execute() -> Result<()> {
 #[clap(version, about)]
 enum Cli {
 	Import(ImportArgs),
+	Run(RunArgs),
 }
 
 #[derive(Parser)]
 struct ImportArgs {
-	#[arg(required = true)]
 	path: PathBuf,
+}
+
+#[derive(Parser)]
+struct RunArgs {
+	#[arg(index = 1)]
+	query_name: String,
 }
