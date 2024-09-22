@@ -8,12 +8,12 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::config::get_config;
 
-pub struct Database<T: DeserializeOwned + Serialize> {
+pub struct Database<T> {
 	file_path: PathBuf,
 	pub records: Vec<T>,
 }
 
-impl<T: DeserializeOwned + Serialize> Database<T> {
+impl<T: DeserializeOwned> Database<T> {
 	pub fn load(file_path: &str) -> Result<Self> {
 		let folder_path = get_config()?.db_root.clone();
 
@@ -45,7 +45,9 @@ impl<T: DeserializeOwned + Serialize> Database<T> {
 			records,
 		})
 	}
+}
 
+impl<T: Serialize> Database<T> {
 	pub fn save(&self) -> Result<()> {
 		let stringified = serde_json::to_string_pretty(&self.records)?;
 		write(&self.file_path, stringified).context("failed to write to database file")?;
