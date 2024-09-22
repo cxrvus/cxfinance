@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::pattern::Pattern;
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Transaction {
@@ -10,7 +10,9 @@ pub struct Transaction {
 }
 
 impl Transaction {
-	pub fn is_match(&self, pattern: Pattern) -> bool { pattern.is_match(&self.description) }
+	pub fn is_match(&self, pattern: Pattern) -> bool {
+		pattern.is_match(&self.description)
+	}
 }
 
 // todo: group-by patterns
