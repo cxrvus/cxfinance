@@ -3,6 +3,7 @@ use clap::Parser;
 use std::path::PathBuf;
 
 mod config;
+mod database;
 mod import;
 mod parser;
 mod pattern;
