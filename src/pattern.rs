@@ -10,7 +10,7 @@ pub struct Pattern {
 }
 
 impl Pattern {
-	pub fn is_match(self, string: &str) -> bool {
+	pub fn _is_match(self, string: &str) -> bool {
 		let regex = Regex::new(&self.rx);
 		if let Ok(regex) = regex {
 			regex.is_match(&string)

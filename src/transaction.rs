@@ -10,8 +10,8 @@ pub struct Transaction {
 }
 
 impl Transaction {
-	pub fn is_match(&self, pattern: Pattern) -> bool {
-		pattern.is_match(&self.description)
+	pub fn _is_match(&self, pattern: Pattern) -> bool {
+		pattern._is_match(&self.description)
 	}
 }
 
