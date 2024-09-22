@@ -30,7 +30,9 @@ impl<T: DeserializeOwned> Database<T> {
 		full_path.push(&file_path);
 
 		if let None = file_path.extension() {
-			panic!("specified database file is missing a file extension\n(needs to be JSON or CSV)");
+			panic!(
+				"specified database file is missing a file extension\n(needs to be JSON or CSV)"
+			);
 		}
 
 		if !full_path.exists() {

@@ -1,6 +1,6 @@
 use crate::database::Database;
-use crate::transaction::Transaction;
 use crate::parser::parse_transactions;
+use crate::transaction::Transaction;
 use anyhow::Result;
 use std::path::PathBuf;
 
