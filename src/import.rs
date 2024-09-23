@@ -1,4 +1,4 @@
-use crate::cli::loading;
+use crate::tui::loading;
 use crate::database::Database;
 use crate::parser::parse_transactions;
 use crate::pattern::Pattern;
