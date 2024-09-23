@@ -27,7 +27,7 @@ fn to_base16(number: u64) -> String {
 		let nibble = ((number & (0xf << shift)) >> shift) as usize;
 		string.insert(0, BASE16[nibble].into());
 	}
-	return string.to_uppercase();
+	string.to_uppercase()
 }
 
 fn parse_transactions_sk(path: &PathBuf) -> Result<Vec<RawTransaction>> {
@@ -90,7 +90,7 @@ fn parse_amount_german(transaction: &Map<String, Value>) -> Result<i64> {
 		.expect("raw transaction is missing required field 'Betrag'");
 	let string = value.as_str().expect("cannot parse amount to string");
 	let amount: i64 = string
-		.replace(",", "")
+		.replace(',', "")
 		.parse()
 		.context("couldn't parse transaction amount")?;
 

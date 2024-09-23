@@ -1,12 +1,11 @@
 use serde::{Deserialize, Serialize};
-use serde_json;
 use std::{
 	env::current_dir,
 	fs::{read_to_string, write},
 	path::PathBuf,
 };
 
-const CFG_FILE: &'static str = "cxconfig.json";
+const CFG_FILE: &str = "cxconfig.json";
 
 #[derive(Deserialize, Serialize)]
 pub struct Config {
@@ -41,8 +40,10 @@ pub fn get_config() -> Config {
 
 pub fn create_default() {
 	let path = get_config_path();
-	let default_config = serde_json::to_string(&Config::default()).expect("failed to serialize default config");
-	write(path, default_config).expect("failed to create default config file in your home directory");
+	let default_config =
+		serde_json::to_string(&Config::default()).expect("failed to serialize default config");
+	write(path, default_config)
+		.expect("failed to create default config file in your home directory");
 	println!("created a default config file ({CFG_FILE}) in your home directory.");
 }
 
@@ -57,5 +58,5 @@ pub fn get_full_path(file_path: &PathBuf) -> PathBuf {
 fn join_paths(a: PathBuf, b: &PathBuf) -> PathBuf {
 	let mut path = a;
 	path.push(b);
-	return path;
+	path
 }

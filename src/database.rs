@@ -27,7 +27,7 @@ impl<T: DeserializeOwned> Database<T> {
 
 		let file_path = PathBuf::from(file_path);
 
-		if let None = file_path.extension() {
+		if file_path.extension().is_none() {
 			panic!(
 				"specified database file is missing a file extension\n(needs to be JSON or CSV)"
 			);

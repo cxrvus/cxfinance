@@ -1,8 +1,8 @@
-use crate::tui::loading;
 use crate::database::Database;
 use crate::parser::parse_transactions;
 use crate::pattern::Pattern;
 use crate::transaction::{RawTransaction, Transaction};
+use crate::tui::loading;
 use anyhow::{Ok, Result};
 use std::path::PathBuf;
 
@@ -22,9 +22,9 @@ fn merge_transactions(
 	db_transacs: Vec<Transaction>,
 	imp_transacs: Vec<RawTransaction>,
 ) -> Result<Vec<Transaction>> {
-	if imp_transacs.len() == 0 {
+	if imp_transacs.is_empty() {
 		Ok(db_transacs)
-	} else if db_transacs.len() == 0 {
+	} else if db_transacs.is_empty() {
 		categorize(imp_transacs)
 	} else {
 		let new_transacs = imp_transacs
