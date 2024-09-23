@@ -2,6 +2,7 @@ use anyhow::Result;
 use clap::Parser;
 use std::path::PathBuf;
 
+mod cli;
 mod config;
 mod database;
 mod import;
