@@ -1,4 +1,4 @@
-use crate::transaction::Transaction;
+use crate::transaction::RawTransaction;
 use anyhow::{anyhow, Context, Result};
 use csv::{Reader, ReaderBuilder};
 use serde_json::{Map, Value};
@@ -8,7 +8,7 @@ use std::{
 	path::PathBuf,
 };
 
-pub fn parse_transactions(path: &PathBuf) -> Result<Vec<Transaction>> {
+pub fn parse_transactions(path: &PathBuf) -> Result<Vec<RawTransaction>> {
 	// idea: split up into sub-modules & match a Bank enum to support different banks formats
 	parse_transactions_sk(path)
 }
@@ -30,17 +30,17 @@ fn to_base16(number: u64) -> String {
 	return string.to_uppercase();
 }
 
-fn parse_transactions_sk(path: &PathBuf) -> Result<Vec<Transaction>> {
+fn parse_transactions_sk(path: &PathBuf) -> Result<Vec<RawTransaction>> {
 	fix_uft8(path)?;
 
-	let mut transactions: Vec<Transaction> = vec![];
+	let mut transactions: Vec<RawTransaction> = vec![];
 	let mut rdr = get_csv_reader(path)?;
 
 	for sk_transaction in rdr.deserialize() {
 		let sk_transaction: Map<String, Value> =
 			sk_transaction.context("failed to parse transaction")?;
 
-		transactions.push(Transaction {
+		transactions.push(RawTransaction {
 			date: parse_date_german(&sk_transaction)?,
 			amount: parse_amount_german(&sk_transaction)?,
 			description: parse_description_sk(&sk_transaction),

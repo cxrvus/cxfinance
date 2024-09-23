@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Ok, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::{database::Database, pattern::Pattern, transaction::Transaction};
+use crate::{database::Database, transaction::RawTransaction};
 
 #[derive(Debug, Deserialize, Default)]
 enum Grouping {
@@ -56,12 +56,7 @@ impl Query {
 		// todo: filter for self.categories
 		// todo: default categories to ALL
 
-		let transactions = Database::<Transaction>::load("transactions.json")?;
-
-		//temporary display for tagged transactions:
-		let mut tagged = transactions.tag()?;
-		tagged.path = "tagged.json".into();
-		tagged.save()?;
+		let transactions = Database::<RawTransaction>::load("transactions.json")?;
 
 		// todo: group by patterns (using summation)
 		// todo: group by dates (daily)

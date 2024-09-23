@@ -42,6 +42,7 @@ fn execute() -> Result<()> {
 #[clap(version, about)]
 enum Cli {
 	Import(ImportArgs),
+	// todo: add categorize for manual categorization independent of importing
 	Run(RunArgs),
 }
 
