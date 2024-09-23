@@ -3,16 +3,16 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Ok, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::{database::Database, transaction::Transaction};
+use crate::{database::Database, pattern::Pattern, transaction::Transaction};
 
-#[derive(Deserialize, Default)]
+#[derive(Debug, Deserialize, Default)]
 enum Grouping {
 	#[default]
 	Daily,
 	Monthly,
 }
 
-#[derive(Deserialize, Default)]
+#[derive(Debug, Deserialize, Default)]
 enum Aggregation {
 	#[default]
 	Sum,
@@ -21,13 +21,15 @@ enum Aggregation {
 	Median,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 pub struct Query {
 	name: String,
 	description: Option<String>,
 	grouping: Option<Grouping>,
 	aggregation: Option<Aggregation>,
 	categories: Option<Vec<String>>,
+	from_date: Option<String>,
+	to_date: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -48,12 +50,23 @@ impl Query {
 		query.run()
 	}
 	pub fn run(&self) -> Result<()> {
+		// fixme: unnecessary clone?
+		println!("{:?}", self);
+		let _categories = self.categories.clone().expect("TODO");
+		// todo: filter for self.categories
+		// todo: default categories to ALL
+
 		let transactions = Database::<Transaction>::load("transactions.json")?;
-		let patterns = Database::<Transaction>::load("patterns.json")?;
+
+		//temporary display for tagged transactions:
+		let mut tagged = transactions.tag()?;
+		tagged.path = "tagged.json".into();
+		tagged.save()?;
 
 		// todo: group by patterns (using summation)
 		// todo: group by dates (daily)
 		// todo: match for aggregation & grouping
+		// todo: fill in empty date groupings
 
 		Ok(())
 	}
