@@ -60,3 +60,10 @@ pub fn categorize(raw_transacs: Vec<RawTransaction>) -> Result<Vec<Transaction>>
 	}
 	Ok(transacs)
 }
+
+pub fn recategorize() -> Result<()> {
+	let mut db = Database::<Transaction>::load("transactions.json")?;
+	let raw_transacs = db.records.into_iter().map(|t| t.data).collect();
+	db.records = categorize(raw_transacs)?;
+	db.save()
+}

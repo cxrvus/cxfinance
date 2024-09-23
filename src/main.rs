@@ -33,6 +33,7 @@ fn main() {
 fn execute() -> Result<()> {
 	let res = Cli::parse();
 	match res {
+		Cli::Categorize => import::recategorize(),
 		Cli::Import(args) => import::import_transactions(args.path),
 		Cli::Run(run_args) => query::Query::run_by_name(&run_args.query_name),
 	}
@@ -41,8 +42,8 @@ fn execute() -> Result<()> {
 #[derive(Parser)]
 #[clap(version, about)]
 enum Cli {
+	Categorize,
 	Import(ImportArgs),
-	// todo: add categorize for manual categorization independent of importing
 	Run(RunArgs),
 }
 
