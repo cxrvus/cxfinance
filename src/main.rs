@@ -34,6 +34,7 @@ fn execute() -> Result<()> {
 	let res = Cli::parse();
 	match res {
 		Cli::Categorize => import::recategorize(),
+		Cli::ResetConfig => Ok(config::create_default()),
 		Cli::Import(args) => import::import_transactions(args.path),
 		Cli::Run(run_args) => query::Query::run_by_name(&run_args.query_name),
 	}
@@ -43,6 +44,7 @@ fn execute() -> Result<()> {
 #[clap(version, about)]
 enum Cli {
 	Categorize,
+	ResetConfig,
 	Import(ImportArgs),
 	Run(RunArgs),
 }
