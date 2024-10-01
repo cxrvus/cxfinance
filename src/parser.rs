@@ -1,6 +1,7 @@
 use crate::transaction::RawTransaction;
 use anyhow::{anyhow, Context, Result};
-use csv::{Reader, ReaderBuilder};
+use csv::{Reader, ReaderBuilder, Writer};
+use serde::Serialize;
 use serde_json::{Map, Value};
 use std::{
 	fs::{read, write, File},
@@ -58,6 +59,17 @@ fn get_csv_reader(path: &PathBuf) -> Result<Reader<File>> {
 		.context("failed to create CSV reader")
 }
 
+pub fn convert_to_csv_str<T: Serialize>(records: &Vec<T>) -> Result<String> {
+	let mut wtr = Writer::from_writer(vec![]);
+
+	for record in records {
+		wtr.serialize(record)?;
+	}
+
+	let string = String::from_utf8(wtr.into_inner()?)?;
+	Ok(string)
+}
+
 fn fix_uft8(path: &PathBuf) -> Result<()> {
 	let text = read(path).context("failed to read from file for sanitization")?;
 	let sanitized_text = String::from_utf8_lossy(&text).to_string();
@@ -112,5 +124,5 @@ fn parse_description_sk(transaction: &Map<String, Value>) -> String {
 			.unwrap()
 	})
 	.collect::<Vec<&str>>()
-	.join(";")
+	.join("\n")
 }

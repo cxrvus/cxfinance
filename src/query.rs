@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Ok, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::{database::Database, transaction::Transaction, tui};
+use crate::{database::Database, parser::convert_to_csv_str, transaction::Transaction, tui};
 
 #[derive(Debug, Deserialize, Default)]
 enum Grouping {
@@ -39,30 +39,57 @@ pub struct QueryResult {
 	values: HashMap<String, i64>,
 }
 
+#[derive(Default)]
+pub enum ResultFormat {
+	#[default]
+	Table,
+	Csv,
+}
+
+impl TryFrom<String> for ResultFormat {
+	type Error = anyhow::Error;
+
+	fn try_from(value: String) -> Result<Self> {
+		use ResultFormat::*;
+
+		match value.to_lowercase().as_str() {
+			"table" => Ok(Table),
+			"csv" => Ok(Csv),
+			"" => Ok(Self::default()),
+			invalid => Err(anyhow!("invalid format option: {invalid}")),
+		}
+	}
+}
+
 impl Query {
-	pub fn run_by_name(name: &str) -> Result<()> {
+	pub fn run_by_name(name: &str, fmt: ResultFormat) -> Result<()> {
 		let db = Database::<Query>::load("queries.json")?;
 		let query = db
 			.records
 			.iter()
 			.find(|q| q.name == name)
 			.ok_or(anyhow!("could not find query '{name}'"))?;
-		query.run()
+		query.run(fmt)
 	}
-	pub fn run(&self) -> Result<()> {
+	pub fn run(&self, fmt: ResultFormat) -> Result<()> {
 		// fixme: unnecessary clone?
 		let _categories = self.categories.clone().expect("TODO");
 		// todo: filter for self.categories
 		// todo: default categories to ALL
 
-		let transactions = Database::<Transaction>::load("transactions.json")?;
+		let records = Database::<Transaction>::load("transactions.json")?.records;
 
-		let table = tui::table(
-			&transactions.records,
-			vec!["date", "amount", "category", "hash"],
-		);
-		// dbg!(transactions.records);
-		println!("{table}");
+		let output = match fmt {
+			ResultFormat::Table => {
+				let table = tui::table(&records, vec!["date", "amount", "category", "hash"]);
+				table.to_string()
+			}
+			ResultFormat::Csv => convert_to_csv_str(&records)?,
+			// todo: fix CSV conversion (unable to parse Maps)
+			// idea: just write your own function
+		};
+
+		println!("{output}");
 
 		// todo: group by patterns (using summation)
 		// todo: group by dates (daily)

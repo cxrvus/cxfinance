@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
+use query::ResultFormat;
 use std::path::PathBuf;
 
 mod config;
@@ -39,7 +40,10 @@ fn execute() -> Result<()> {
 			Ok(())
 		}
 		Cli::Import(args) => import::import_transactions(args.path),
-		Cli::Run(run_args) => query::Query::run_by_name(&run_args.query_name),
+		Cli::Run(run_args) => {
+			let fmt = ResultFormat::try_from(run_args.fmt.unwrap_or_default())?;
+			query::Query::run_by_name(&run_args.name, fmt)
+		}
 	}
 }
 
@@ -49,7 +53,7 @@ enum Cli {
 	Categorize,
 	ResetConfig,
 	Import(ImportArgs),
-	Run(RunArgs),
+	Run(RunQuery),
 }
 
 #[derive(Parser)]
@@ -58,7 +62,8 @@ struct ImportArgs {
 }
 
 #[derive(Parser)]
-struct RunArgs {
-	#[arg(index = 1)]
-	query_name: String,
+struct RunQuery {
+	#[arg(short, long)]
+	fmt: Option<String>,
+	name: String,
 }
